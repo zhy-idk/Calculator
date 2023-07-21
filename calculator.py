@@ -12,7 +12,7 @@ class Calculator(ctk.CTk):
         self.keypad()
         self.value1 = ""
         self.value2 = ""
-        self.operation="none"
+        self.operation = "none"
 
         self.grid_rowconfigure(1, weight=1)  # configure grid system
         self.grid_columnconfigure(0, weight=1)
@@ -166,67 +166,69 @@ class Calculator(ctk.CTk):
         decimal.grid(row=4, column=2, padx=1, pady=1)
     
     def reset(self):
+        self.operation = "none"
+        self.value1 = ""
+        self.value2 = ""
         self.textbox.insert("end-1c", "0")
 
     def decimal(self):
         self.textbox.configure(state="normal")
 
         if self.operation == "none":
-            if "." not in self.value1:
+            if "." not in self.value1 and self.value1 != "":
                 self.value1 += "."
                 self.textbox.insert("end-1c", ".")
         else:
-            if "." not in self.value2:
-                if self.value2 == "":
-                    self.reset()
-                    self.value2 += "."
-                    self.textbox.insert("end-1c", ".")
+            if "." not in self.value2 and self.value2 != "":
+                self.value2 += "."
+                self.textbox.insert("end-1c", ".")
 
         self.textbox.configure(state="disabled")
 
     def click(self, number):
         self.textbox.configure(state="normal")
+        last_content = self.textbox.get("end-2c", "end-1c")
 
         if self.operation == "none":
-            if self.value1 == "":
-                if number != 0:
-                    self.textbox.delete("end-2c")
-
-                self.value1 += str(number)
-                self.textbox.insert("end-1c", str(number))
+            if (number == 0 and last_content == "0") or self.value1 == "":
+                self.textbox.delete("end-2c")
+            self.value1 += str(number)
+            self.textbox.insert("end-1c", str(number))
 
         else:
-            if self.value2 == "":
-                if number == 0:
-                    self.textbox.delete("end-2c")
-
-                self.value2 += str(number)
-                self.textbox.insert("end-1c", str(number))
-
+            if last_content == "0" and number == 0:
+                self.textbox.delete("end-2c")
+            self.value2 += str(number)
+            self.textbox.insert("end-1c", str(number))
         
         self.textbox.configure(state="disabled")
 
     def clear_last(self):
         self.textbox.configure(state="normal")
         last_content = self.textbox.get("end-2c", "end-1c")
-        content = self.textbox.get("1.0", tk.END)
-        if last_content == " ":
-            self.textbox.delete("end-2c")
-            self.textbox.delete("end-2c")
-            self.textbox.delete("end-2c")
-            self.operation = "none"
-            self.value2 = ""
+
+        if self.operation != "none":
+            if last_content == " ":
+                self.textbox.delete("end-2c")
+                self.textbox.delete("end-2c")
+                self.textbox.delete("end-2c")
+                self.operation = "none"
+            else:
+               self.textbox.delete("end-2c")
+               self.value2 = self.value2[:len(self.value2)-1]
         else:
             self.textbox.delete("end-2c")
-            if content == " ":
-                self.value1 = ""
+            self.value1 = self.value1[:len(self.value1)-1]
+            if self.value1 == "":
+                #print("test")
                 self.reset()
+
+        #print(self.operation)
+        #print(self.value1 if self.value1 != "" else 0)
+        #print(self.value2 if self.value2 != "" else 0)
         self.textbox.configure(state="disabled")
 
     def clear(self):
-        self.operation = "none"
-        self.value1 = ""
-        self.value2 = ""
         self.textbox.configure(state="normal")
         self.textbox.delete(0.0, "end-1c")
         self.reset()
@@ -259,50 +261,53 @@ class Calculator(ctk.CTk):
         self.operation = operator
         
     def enter(self):
-        self.test()
-        if self.value1.isdecimal() == False:
-            self.value1 = float(self.value1)
-        else:
-            self.value1 = int(self.value1)
+        try:
+            if self.value1.isdecimal() == False:
+                self.value1 = float(self.value1)
+            else:
+                self.value1 = int(self.value1)
 
-        if self.value2.isdecimal() == False:
-            self.value2 = float(self.value2)
-        else:
-            self.value2 = int(self.value2)
+            if self.value2.isdecimal() == False:
+                self.value2 = float(self.value2)
+            else:
+                self.value2 = int(self.value2)
 
-        x = self.value1
-        y = self.value2
-        z = 0
+            x = self.value1
+            y = self.value2
+            z = 0
 
-        self.textbox.configure(state="normal")
-        self.textbox.delete(0.0, "end-1c")
+            self.textbox.configure(state="normal")
+            self.textbox.delete(0.0, "end-1c")
 
-        if self.operation == "+":
-            z = x + y
-            z = 0 if z == 0 else z
+            if self.operation == "+":
+                z = x + y
+                z = 0 if z == 0 else z
+            elif self.operation == "-":
+                z = x - y
+                z = 0 if z == 0 else z
+            elif self.operation == "*":
+                z = x * y
+                z = 0 if z == 0 else z
+            elif self.operation == "/":
+                z = x / y
+                z = 0 if z == 0 else z
+
+            z = round(z, 5) if isinstance(z, float) else z
             self.textbox.insert("end-1c", z)
-        elif self.operation == "-":
-            z = x - y
-            z = 0 if z == 0 else z
-            self.textbox.insert("end-1c", z)
-        elif self.operation == "*":
-            z = x * y
-            z = 0 if z == 0 else z
-            self.textbox.insert("end-1c", z)
-        elif self.operation == "/":
-            z = x / y
-            z = 0 if z == 0 else z
-            self.textbox.insert("end-1c", z)
 
-        self.value1 = str(z)
-        self.value2 = ""
-        self.operation = "none"
+            self.value1 = str(z)
+            self.value2 = ""
+            self.operation = "none"
 
-        self.textbox.configure(state="disabled")
-        
-    def test(self):
-        print(self.value1)
-        print(self.value2)
+            self.textbox.configure(state="disabled")
+
+        except:
+            self.textbox.configure(state="normal")
+            self.textbox.delete(0.0, "end-1c")
+            self.textbox.insert(0.0, "ERROR")
+            self.textbox.configure(state="disabled")
+            #print("Error")
+
 
 if __name__ == "__main__":
     Calculator().mainloop()
